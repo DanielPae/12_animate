@@ -72,17 +72,21 @@ void first_pass() {
   extern int num_frames;
   extern char name[128];
 
-  int num_f, num_b, num_v;
+  int num_f, num_b, num_v, i;
   for (i=0;i<lastop;i++) {
     //printf("%d: ",i);
+    //struct SYMTAB *sym;
     switch (op[i].opcode)
       {
       case BASENAME:
+        //sym = *(op[i].op.basename.p);
+	//lookup_symbol((*op[i].op.basename.p).name);
 	num_b++;
-	name = op[i].op.basename.p.name;
+	strcpy((*op[i].op.basename.p).name, name);
+	//name = (*op[i].op.basename.p).name;
       case FRAMES:
 	num_f++;
-	num_frames = op[i].op.frames.p.s;
+	num_frames = op[i].op.frames.num_frames;
       case VARY:
 	num_v++;
       }
@@ -90,8 +94,18 @@ void first_pass() {
   if(num_b == 0) printf("WARNING basename not set\nDefault name used\n");
   if(num_f == 0 && num_v != 0){
     printf("No frames set and vary command used\n");
-    quit(1);
+    exit(1);
   }
+  if(num_b > 1){
+    printf("Multiple basenames given\n");
+    exit(1);
+  }
+  if(num_f > 1){
+    printf("Multiple frame values given\n");
+    exit(1);
+  }
+  
+}
 
 /*======== struct vary_node ** second_pass() ==========
   Inputs:
@@ -113,6 +127,7 @@ void first_pass() {
   appropirate value.
   ====================*/
 struct vary_node ** second_pass() {
+  
   return NULL;
 }
 
