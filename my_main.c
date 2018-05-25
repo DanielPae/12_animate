@@ -50,13 +50,11 @@
 
 
 
-struct vary_node * find_knob(struct vary_node* curr, char* name){
-  if(strcmp(name, curr->name)) return curr;
+double find_knob(struct vary_node* curr, char* name){
+  if(strcmp(name, curr->name)) return curr->value;
   else{
     if(curr->next == NULL){
-      struct vary_node new;
-      new.value = 0;
-      return &new;
+      return 0;
     }
     else return find_knob(curr->next, name);
   }
@@ -85,6 +83,9 @@ void first_pass() {
   extern char name[128];
 
   int num_f, num_b, num_v, i;
+  num_f = 0;
+  num_b = 0;
+  num_v = 0;
   for (i=0;i<lastop;i++) {
     //printf("%d: ",i);
     //struct SYMTAB *sym;
@@ -93,16 +94,19 @@ void first_pass() {
       case BASENAME:
         //sym = *(op[i].op.basename.p);
 	//lookup_symbol((*op[i].op.basename.p).name);
-	num_b++;
+	num_b += 1;
 	strcpy((*op[i].op.basename.p).name, name);
-	//name = (*op[i].op.basename.p).name;
+	break;
       case FRAMES:
 	num_f++;
 	num_frames = op[i].op.frames.num_frames;
+	break;
       case VARY:
 	num_v++;
+	break;
       }
   }
+  //printf("%d\n", num_f);
   if(num_b == 0) printf("WARNING basename not set\nDefault name used\n");
   if(num_f == 0 && num_v != 0){
     printf("No frames set and vary command used\n");
@@ -139,7 +143,7 @@ void first_pass() {
   appropirate value.
   ====================*/
 struct vary_node ** second_pass() {
-  struct vary_node **knob_v = malloc(num_frames * sizeof(pointer));
+  struct vary_node **knob_v = (struct vary_node **)malloc(num_frames * 4);
   int i, s, val, curr;
   for (i=0;i<lastop;i++) {
     switch (op[i].opcode)
@@ -149,15 +153,11 @@ struct vary_node ** second_pass() {
 	s = op[i].op.vary.start_frame;
 
 	//error checks
-	if(op[i].op.vary.end_val - op[i].op.vary.start_val <= 0){
-	  printf("VARY end value less than or equal to start value\n");
-	  exit(1);
-	}
 	if(op[i].op.vary.end_frame - s <= 0){
 	  printf("VARY end frame less than or equal to start frame\n");
 	  exit(1);
 	}
-	if(op[i].op.vary.end_frame < 0 || s < 0;){
+	if(op[i].op.vary.end_frame < 0 || s < 0){
 	  printf("VARY frames less than 0\n");
 	  exit(1);
 	}
@@ -166,11 +166,14 @@ struct vary_node ** second_pass() {
 	  / (op[i].op.vary.end_frame - s);
 	
 	for(; s < op[i].op.vary.end_frame; s++){
-	  struct vary_node new;
-	  new.next = knob_v[s];
-	  new.value = curr;
-	  strcpy((*op[i].op.basename.p).name, new.name);
-	  knob_v[s] = &new;
+	  //creation of new node
+	  struct vary_node *new =
+	    (struct vary_node*) malloc(sizeof(struct vary_node));
+
+	  new->next = knob_v[s];
+	  new->value = curr;
+	  strcpy((*op[i].op.basename.p).name, new->name);
+	  knob_v[s] = new;
 	  curr += val;
 	}//end of frame for loop
       }//end of switch
@@ -230,7 +233,7 @@ void print_knobs() {
 void my_main() {
 
   int i, f, kn;
-  char *knob;
+  struct SYMTAB *knob;
   struct matrix *tmp;
   struct stack *systems;
   screen t;
@@ -286,9 +289,12 @@ void my_main() {
 
   //FIRST TWO PASSES
   first_pass();
-  struct vary_node (*knob_v)[num_frames];
+  struct vary_node **knob_v;
   knob_v = second_pass();
+
+  //loop through each frame
   for(f=0; f < num_frames; f++){
+    //loop for each image in gif
     for (i=0;i<lastop;i++) {
       //printf("%d: ",i);
       switch (op[i].opcode)
@@ -398,8 +404,9 @@ void my_main() {
 	  if (op[i].op.move.p != NULL)
 	    {
 	      //printf("\tknob: %s",op[i].op.move.p->name);
-	      knob = (*op[i].op.move.p).name;
-	      kn = find_knob(knob_v[f], knob);
+	      knob = op[i].op.move.p;
+	      kn = find_knob(knob_v[f], knob->name);
+	      knob->value = kn;
 	      xval *= kn;
 	      yval *= kn;
 	      zval *= kn;
@@ -418,8 +425,9 @@ void my_main() {
 	  if (op[i].op.scale.p != NULL)
 	    {
 	      //printf("\tknob: %s",op[i].op.scale.p->name);
-	      knob = (*op[i].op.scale.p).name;
-	      kn = find_knob(knob_v[f], knob);
+	      knob = op[i].op.scale.p;
+	      kn = find_knob(knob_v[f], knob->name);
+	      knob->value = kn;
 	      xval *= kn;
 	      yval *= kn;
 	      zval *= kn;
@@ -437,8 +445,9 @@ void my_main() {
 	  if (op[i].op.rotate.p != NULL)
 	    {
 	      //printf("\tknob: %s",op[i].op.rotate.p->name);
-	      knob = (*op[i].op.rotate.p).name;
-	      kn = find_knob(knob_v[f], knob);
+	      knob = op[i].op.rotate.p;
+	      kn = find_knob(knob_v[f], knob->name);
+	      knob->value = kn;
 	      xval *= kn;
 	      yval *= kn;
 	      zval *= kn;
@@ -475,4 +484,5 @@ void my_main() {
       printf("\n");
     }//end operation loop
   }//end of frame loop
+  free(knob_v);
 }
