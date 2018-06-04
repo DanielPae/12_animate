@@ -14,19 +14,19 @@
   pop: remove the top matrix on the origin stack
 
   move/scale/rotate: create a transformation matrix
-                     based on the provided values, then
-                     multiply the current top of the
-                     origins stack by it.
+  based on the provided values, then
+  multiply the current top of the
+  origins stack by it.
 
   box/sphere/torus: create a solid object based on the
-                    provided values. Store that in a
-                    temporary matrix, multiply it by the
-                    current top of the origins stack, then
-                    call draw_polygons.
+  provided values. Store that in a
+  temporary matrix, multiply it by the
+  current top of the origins stack, then
+  call draw_polygons.
 
   line: create a line based on the provided values. Stores
-        that in a temporary matrix, multiply it by the
-        current top of the origins stack, then call draw_lines.
+  that in a temporary matrix, multiply it by the
+  current top of the origins stack, then call draw_lines.
 
   save: call save_extension with the provided filename
 
@@ -59,6 +59,7 @@ double find_knob(struct vary_node* curr, char* name){
     else return find_knob(curr->next, name);
   }
 }
+
 /*======== void first_pass() ==========
   Inputs:
   Returns:
@@ -120,7 +121,7 @@ void first_pass() {
     printf("Multiple frame values given\n");
     exit(1);
   }
-  
+
 }
 
 /*======== struct vary_node ** second_pass() ==========
@@ -175,19 +176,19 @@ struct vary_node ** second_pass() {
 	  strcpy((*op[i].op.basename.p).name, new->name);
 	  knob_v[s] = new;
 	  curr += val;
-	}//end of frame for loop
+	}//end of frame for loop\		\
       }//end of switch
   }//end of op for loop
   return knob_v;
 }//end of function
 
 /*======== void print_knobs() ==========
-Inputs:
-Returns:
+  Inputs:
+  Returns:
 
-Goes through symtab and display all the knobs and their
-currnt values
-====================*/
+  Goes through symtab and display all the knobs and their
+  currnt values
+  ====================*/
 void print_knobs() {
   int i;
 
@@ -233,7 +234,6 @@ void print_knobs() {
 void my_main() {
 
   int i, f, kn;
-  struct SYMTAB *knob;
   struct matrix *tmp;
   struct stack *systems;
   screen t;
@@ -404,9 +404,8 @@ void my_main() {
 	  if (op[i].op.move.p != NULL)
 	    {
 	      //printf("\tknob: %s",op[i].op.move.p->name);
-	      knob = op[i].op.move.p;
-	      kn = find_knob(knob_v[f], knob->name);
-	      knob->value = kn;
+	      kn = find_knob(knob_v[f], (*(op[i].op.move.p)).name);
+	      (*(op[i].op.move.p)).s.value = kn;
 	      xval *= kn;
 	      yval *= kn;
 	      zval *= kn;
@@ -425,9 +424,8 @@ void my_main() {
 	  if (op[i].op.scale.p != NULL)
 	    {
 	      //printf("\tknob: %s",op[i].op.scale.p->name);
-	      knob = op[i].op.scale.p;
-	      kn = find_knob(knob_v[f], knob->name);
-	      knob->value = kn;
+	      kn = find_knob(knob_v[f], (*(op[i].op.scale.p)).name);
+	      (*(op[i].op.scale.p)).s.value = kn;
 	      xval *= kn;
 	      yval *= kn;
 	      zval *= kn;
@@ -445,9 +443,8 @@ void my_main() {
 	  if (op[i].op.rotate.p != NULL)
 	    {
 	      //printf("\tknob: %s",op[i].op.rotate.p->name);
-	      knob = op[i].op.rotate.p;
-	      kn = find_knob(knob_v[f], knob->name);
-	      knob->value = kn;
+	      kn = find_knob(knob_v[f], (*(op[i].op.rotate.p)).name);
+	      (*(op[i].op.rotate.p)).s.value = kn;
 	      xval *= kn;
 	      yval *= kn;
 	      zval *= kn;
